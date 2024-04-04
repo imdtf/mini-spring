@@ -16,6 +16,7 @@ public class IocTest {
     @Test
     public void testIoc1() {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
-        ((AService)context.getBean("a-service")).sayHello();
+        AService aService = ((AService) context.getBean("a-service"));
+        aService.sayHello();
     }
 }

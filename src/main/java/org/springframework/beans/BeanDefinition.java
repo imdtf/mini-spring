@@ -1,6 +1,5 @@
 package org.springframework.beans;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -11,10 +10,40 @@ import lombok.Data;
  * 4
  */
 @Data
-@AllArgsConstructor
 public class BeanDefinition {
+
+    private static final String SCOPE_SINGLETON = "singleton";
+
+    private static final String SCOPE_PROTOTYPE = "prototype";
+
+    private boolean lazyInit;
+
+    private String[] dependsOn;
+
+    private ConstructorArgumentValues constructorArguments;
+
+    private PropertyValues propertyValues;
+
+    private String initMethodName;
+
+    private volatile Object beanClass;
 
     private String id;
 
     private String className;
+
+    private String scope = SCOPE_SINGLETON;
+
+    public BeanDefinition(String id, String className) {
+        this.id = id;
+        this.className = className;
+    }
+
+    public boolean isSingleton() {
+        return scope.equals(SCOPE_PROTOTYPE);
+    }
+
+    public boolean isPrototype() {
+        return scope.equals(SCOPE_PROTOTYPE);
+    }
 }

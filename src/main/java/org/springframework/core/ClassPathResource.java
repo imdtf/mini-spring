@@ -17,12 +17,13 @@ import java.util.Iterator;
  */
 public class ClassPathResource implements Resource {
 
-    private Iterator<Element> elementIterator;
+    private final Iterator<Element> elementIterator;
 
+    @SuppressWarnings("unchecked")
     public ClassPathResource(String fileName) {
         SAXReader saxReader = new SAXReader();
         URL xmlPath = this.getClass().getClassLoader().getResource(fileName);
-        Document document = null;
+        Document document;
         try {
             document = saxReader.read(xmlPath);
         } catch (DocumentException e) {

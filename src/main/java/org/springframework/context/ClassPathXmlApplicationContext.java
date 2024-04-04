@@ -12,9 +12,9 @@ import org.springframework.core.ClassPathResource;
  * 3 * @Date: 2024/4/3 21:07
  * 4
  */
-public class ClassPathXmlApplicationContext {
+public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationEventPublisher {
 
-    private final BeanFactory beanFactory;
+    private final SimpleBeanFactory beanFactory;
 
     public ClassPathXmlApplicationContext(String fileName) {
         ClassPathResource resource = new ClassPathResource(fileName);
@@ -23,7 +23,32 @@ public class ClassPathXmlApplicationContext {
         xmlBeanDefinitionReader.loadBeanDefinitions(resource);
     }
 
+    @Override
     public Object getBean(String beanName) {
         return beanFactory.getBean(beanName);
+    }
+
+    @Override
+    public boolean containsBean(String beanName) {
+        return beanFactory.containsBean(beanName);
+    }
+
+    @Override
+    public boolean isSingleton(String beanName) {
+        return beanFactory.isSingleton(beanName);
+    }
+
+    @Override
+    public boolean isPrototype(String beanName) {
+        return beanFactory.isPrototype(beanName);
+    }
+
+    @Override
+    public Class<?> getType(String beanName) {
+        return beanFactory.getType(beanName);
+    }
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
     }
 }
