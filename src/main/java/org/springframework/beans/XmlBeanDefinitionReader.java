@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.dom4j.Element;
 import org.springframework.core.Resource;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import static org.springframework.beans.PropertyValues.PropertyValue;
 import static org.springframework.beans.ConstructorArgumentValues.ArgumentValueHolder;
+import static org.springframework.beans.PropertyValues.PropertyValue;
 
 /**
  * 0 *
@@ -31,15 +33,27 @@ public class XmlBeanDefinitionReader {
 
             PropertyValues propertyValues = new PropertyValues();
             List<Element> propertyElements = element.elements("property");
+            List<String> refNames = new ArrayList<>();
             for (Element propertyElement : propertyElements) {
-                propertyValues.addPropertyValue(new PropertyValue(propertyElement.attributeValue("name"), propertyElement.attributeValue("value")));
+                String ref = propertyElement.attributeValue("ref");
+                boolean isRef;
+                if (Objects.nonNull(ref) && !"".equals(ref)) {
+                    isRef = true;
+                    refNames.add(ref);
+                } else {
+                    isRef = false;
+                }
+                propertyValues.addPropertyValue(new PropertyValue(propertyElement.attributeValue("name"), isRef ? ref : propertyElement.attributeValue("value"), isRef));
             }
+            beanDefinition.setDependsOn(refNames.toArray(new String[0]));
             beanDefinition.setPropertyValues(propertyValues);
 
             ConstructorArgumentValues constructorArgumentValues = new ConstructorArgumentValues();
             List<Element> constructorArgElements = element.elements("constructor-arg");
             for (Element e : constructorArgElements) {
-                constructorArgumentValues.addArgumentValue(new ArgumentValueHolder(e.attributeValue("type"), e.attributeValue("name"), e.attributeValue("value")));
+                String ref = e.attributeValue("ref");
+                boolean isRef = Objects.nonNull(ref) && !ref.isEmpty();
+                constructorArgumentValues.addArgumentValue(new ArgumentValueHolder(e.attributeValue("type"), e.attributeValue("name"), isRef ? ref : e.attributeValue("value"), isRef));
             }
             beanDefinition.setConstructorArguments(constructorArgumentValues);
 

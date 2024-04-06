@@ -44,5 +44,7 @@ public class ConstructorArgumentValues {
         private String name;
 
         private Object value;
+
+        private boolean isRef;
     }
 }

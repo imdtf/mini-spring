@@ -2,9 +2,7 @@ package org.springframework.beans;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static org.springframework.beans.ConstructorArgumentValues.ArgumentValueHolder;
 
@@ -19,13 +17,18 @@ public class SimpleBeanFactory extends DefaultSingleBeanRegistry implements Bean
 
     private final Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>();
 
+    private final Map<String, Object> earlySingletonObjects = new HashMap<>();
+
     @Override
     public Object getBean(String beanName) {
         Object bean = this.getSingleton(beanName);
         if (Objects.isNull(bean)) {
-            BeanDefinition beanDefinition = getBeanDefinition(beanName);
-            bean = createBean(beanDefinition);
-            registerSingleton(beanName, bean);
+            bean = earlySingletonObjects.get(beanName);
+            if (Objects.isNull(bean)) {
+                BeanDefinition beanDefinition = getBeanDefinition(beanName);
+                bean = createBean(beanDefinition);
+                registerSingleton(beanName, bean);
+            }
         }
         return bean;
     }
@@ -81,14 +84,29 @@ public class SimpleBeanFactory extends DefaultSingleBeanRegistry implements Bean
         }
         try {
             Class<?> clazz = Class.forName(beanDefinition.getClassName());
-            Object bean;
-            ConstructorArgumentValues argumentValues = beanDefinition.getConstructorArguments();
-            if (!argumentValues.isEmpty()) {
-                int argumentCount = argumentValues.getArgumentCount();
-                Class<?>[] paramTypes = new Class<?>[argumentCount];
-                Object[] paramValues = new Object[argumentCount];
-                for (int i = 0; i < argumentCount; i++) {
-                    ArgumentValueHolder argumentValue = argumentValues.getArgumentValue(i);
+            Object obj = this.doCreateBean(beanDefinition, clazz);
+            this.earlySingletonObjects.put(beanDefinition.getId(), obj);
+            this.handleProperties(beanDefinition, clazz, obj);
+            return obj;
+        } catch (Exception e) {
+            throw new BeansException(e);
+        }
+    }
+
+    private Object doCreateBean(BeanDefinition beanDefinition, Class<?> clazz) throws Exception {
+        Object bean;
+        ConstructorArgumentValues argumentValues = beanDefinition.getConstructorArguments();
+        if (!argumentValues.isEmpty()) {
+            int argumentCount = argumentValues.getArgumentCount();
+            Class<?>[] paramTypes = new Class<?>[argumentCount];
+            Object[] paramValues = new Object[argumentCount];
+            for (int i = 0; i < argumentCount; i++) {
+                ArgumentValueHolder argumentValue = argumentValues.getArgumentValue(i);
+                if (argumentValue.isRef()) {
+                    Object dependentBean = getBean(argumentValue.getValue().toString());
+                    paramValues[i] = dependentBean;
+                    paramTypes[i] = dependentBean.getClass();
+                } else {
                     String type = argumentValue.getType();
                     if ("java.lang.String".equals(type)) {
                         paramTypes[i] = String.class;
@@ -96,7 +114,7 @@ public class SimpleBeanFactory extends DefaultSingleBeanRegistry implements Bean
                     } else if ("int".equals(type)) {
                         paramTypes[i] = int.class;
                         paramValues[i] = Integer.valueOf((String) argumentValue.getValue());
-                    } else if("java.lang.Integer".equals(type)) {
+                    } else if ("java.lang.Integer".equals(type)) {
                         paramTypes[i] = Integer.class;
                         paramValues[i] = Integer.valueOf((String) argumentValue.getValue());
                     } else {
@@ -104,29 +122,39 @@ public class SimpleBeanFactory extends DefaultSingleBeanRegistry implements Bean
                         paramValues[i] = argumentValue.getValue();
                     }
                 }
-                Constructor<?> constructor = clazz.getConstructor(paramTypes);
-                bean = constructor.newInstance(paramValues);
-            } else {
-                bean = clazz.newInstance();
             }
+            Constructor<?> constructor = clazz.getConstructor(paramTypes);
+            bean = constructor.newInstance(paramValues);
+        } else {
+            bean = clazz.newInstance();
+        }
 
-            PropertyValues propertyValues = beanDefinition.getPropertyValues();
-            if (!propertyValues.isEmpty()) {
-                for (int i = 0; i < propertyValues.size(); i++) {
-                    PropertyValues.PropertyValue propertyValue = propertyValues.getPropertyValueList().get(i);
-                    String methodName = "set" + propertyValue.getName().substring(0, 1).toUpperCase() + propertyValue.getName().substring(1);
-                    Method method = clazz.getMethod(methodName, propertyValue.getValue().getClass());
-                    method.invoke(bean, propertyValue.getValue());
+        return bean;
+    }
+
+    private void handleProperties(BeanDefinition beanDefinition, Class<?> clazz, Object bean) throws Exception {
+        PropertyValues propertyValues = beanDefinition.getPropertyValues();
+        if (!propertyValues.isEmpty()) {
+            for (int i = 0; i < propertyValues.size(); i++) {
+                PropertyValues.PropertyValue propertyValue = propertyValues.getPropertyValueList().get(i);
+                Object value = propertyValue.getValue();
+                if (propertyValue.isRef()) {
+                    value = getBean(propertyValue.getValue().toString());
                 }
+                String methodName = "set" + propertyValue.getName().substring(0, 1).toUpperCase() + propertyValue.getName().substring(1);
+                Method method = clazz.getMethod(methodName, value.getClass());
+                method.invoke(bean, value);
             }
-
-            return bean;
-        } catch (Exception e) {
-            throw new BeansException(e);
         }
     }
 
     public void registerBean(String beanName, Object bean) {
         registerSingleton(beanName, bean);
+    }
+
+    public void refresh() {
+        for (String beanName : beanDefinitionMap.keySet()) {
+            getBean(beanName);
+        }
     }
 }

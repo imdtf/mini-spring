@@ -3,6 +3,8 @@ package org.springframework.support;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.lang.reflect.Field;
+
 /**
  * 0 *
  * 1 * @Author: DTF
@@ -22,9 +24,20 @@ public class AService {
 
     private String property2;
 
+    private BService bService;
+
 
 
     public void sayHello() {
-        System.out.printf("A service say hello! name: %s, level: %d, property1: %s, property2: %s%n", name, level, property1, property2);
+        Class<? extends AService> clazz = this.getClass();
+        Field[] declaredFields = clazz.getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            try {
+                System.out.println(declaredField.getName() + ": " + declaredField.get(this));
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("A service say hello!");
     }
 }
