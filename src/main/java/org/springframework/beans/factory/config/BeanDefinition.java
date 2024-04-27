@@ -1,6 +1,7 @@
-package org.springframework.beans;
+package org.springframework.beans.factory.config;
 
 import lombok.Data;
+import org.springframework.beans.PropertyValues;
 
 /**
  * 0 *

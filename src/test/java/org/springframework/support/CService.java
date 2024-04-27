@@ -1,6 +1,7 @@
 package org.springframework.support;
 
 import lombok.Setter;
+import org.springframework.beans.factory.config.annotation.Autowired;
 
 /**
  * 0 *
@@ -12,5 +13,6 @@ import lombok.Setter;
 @Setter
 public class CService {
 
+    @Autowired
     private AService aService;
 }

@@ -1,15 +1,15 @@
 <beans>
-    <bean id="a-service" class="org.springframework.support.AService">
+    <bean id="aService" class="org.springframework.support.AService">
         <constructor-arg type="java.lang.String" name="name" value="abc"/>
         <constructor-arg type="int" name="level" value="3"/>
         <property name="property1" value="someone says"/>
         <property name="property2" value="Hello world!"/>
-        <property name="bService" ref="b-service"/>
+        <property name="bService" ref="bService"/>
     </bean>
-    <bean id="b-service" class="org.springframework.support.BService">
-        <constructor-arg name="cService" ref="c-service"/>
+    <bean id="bService" class="org.springframework.support.BService">
+        <constructor-arg name="cService" ref="cService"/>
     </bean>
-    <bean id="c-service" class="org.springframework.support.CService">
-        <property name="aService" ref="a-service"/>
+    <bean id="cService" class="org.springframework.support.CService">
+<!--        <property name="aService" ref="a-service"/>-->
     </bean>
 </beans>

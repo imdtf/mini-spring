@@ -1,8 +1,9 @@
 package org.springframework.context;
 
-import org.springframework.beans.BeanFactory;
-import org.springframework.beans.SimpleBeanFactory;
-import org.springframework.beans.XmlBeanDefinitionReader;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.ClassPathResource;
 
 /**
@@ -14,7 +15,7 @@ import org.springframework.core.ClassPathResource;
  */
 public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationEventPublisher {
 
-    private final SimpleBeanFactory beanFactory;
+    private final AutowireCapableBeanFactory beanFactory;
 
     public ClassPathXmlApplicationContext(String fileName) {
         this(fileName, true);
@@ -22,12 +23,25 @@ public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationE
 
     public ClassPathXmlApplicationContext(String fileName, boolean isRefresh) {
         ClassPathResource resource = new ClassPathResource(fileName);
-        beanFactory = new SimpleBeanFactory();
+        beanFactory = new AutowireCapableBeanFactory();
         XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
         xmlBeanDefinitionReader.loadBeanDefinitions(resource);
         if (isRefresh) {
-            beanFactory.refresh();
+            refresh();
         }
+    }
+
+    private void refresh() {
+        registerBeanPostProcessor(this.beanFactory);
+        onRefresh();
+    }
+
+    private void registerBeanPostProcessor(AutowireCapableBeanFactory beanFactory) {
+        beanFactory.addBeanPostProcessor(new AutowiredAnnotationBeanPostProcessor());
+    }
+
+    private void onRefresh() {
+        this.beanFactory.refresh();
     }
 
     @Override

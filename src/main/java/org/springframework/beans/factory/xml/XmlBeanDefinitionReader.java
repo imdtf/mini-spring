@@ -1,15 +1,19 @@
-package org.springframework.beans;
+package org.springframework.beans.factory.xml;
 
 import lombok.RequiredArgsConstructor;
 import org.dom4j.Element;
+import org.springframework.beans.PropertyValues;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.core.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.springframework.beans.ConstructorArgumentValues.ArgumentValueHolder;
 import static org.springframework.beans.PropertyValues.PropertyValue;
+import static org.springframework.beans.factory.config.ConstructorArgumentValues.ArgumentValueHolder;
 
 /**
  * 0 *
@@ -21,7 +25,7 @@ import static org.springframework.beans.PropertyValues.PropertyValue;
 @RequiredArgsConstructor
 public class XmlBeanDefinitionReader {
 
-    private final SimpleBeanFactory beanFactory;
+    private final AutowireCapableBeanFactory beanFactory;
 
     @SuppressWarnings("unchecked")
     public void loadBeanDefinitions(Resource resource) {
